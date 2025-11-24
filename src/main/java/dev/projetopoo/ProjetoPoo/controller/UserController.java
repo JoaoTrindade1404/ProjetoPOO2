@@ -1,5 +1,6 @@
 package dev.projetopoo.ProjetoPoo.controller;
 
+import dev.projetopoo.ProjetoPoo.dto.EmailAndPassword;
 import dev.projetopoo.ProjetoPoo.model.User;
 import dev.projetopoo.ProjetoPoo.services.UserServices;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +38,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public User login(@RequestBody String email, @RequestBody String senha) {
-        return userServices.login(email, senha);
+    public User login(@RequestBody EmailAndPassword body) {
+        return userServices.login(body.email, body.senha);
     }
 }
