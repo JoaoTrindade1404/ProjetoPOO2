@@ -29,9 +29,7 @@ public class Compra {
     )
     private List<Jogo> jogos;
 
-    @ManyToOne
-    @JoinColumn(name = "carrinho_id")
-    private Carrinho carrinho;
+
 
     private double valor;
 

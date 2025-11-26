@@ -84,7 +84,7 @@ public class CompraServices {
         compra.setDataCompra(LocalDateTime.now());
         compra.setValor(valorTotal);
         compra.setJogos(jogosComprados);
-        compra.setCarrinho(carrinho);
+
         compraRepository.save(compra);
 
         carteira.setValor(carteira.getValor() - valorTotal);
