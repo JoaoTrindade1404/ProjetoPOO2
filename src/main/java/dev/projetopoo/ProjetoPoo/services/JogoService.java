@@ -12,21 +12,9 @@ import java.util.List;
 public class JogoService {
 
     private final JogoRepository jogoRepository;
-    private final dev.projetopoo.ProjetoPoo.repository.CarrinhoRepository carrinhoRepository;
-    private final dev.projetopoo.ProjetoPoo.repository.BibliotecaRepository bibliotecaRepository;
-    private final dev.projetopoo.ProjetoPoo.repository.AvaliacaoRepository avaliacaoRepository;
-    private final dev.projetopoo.ProjetoPoo.repository.CompraRepository compraRepository;
 
-    public JogoService(JogoRepository jogoRepository,
-                       dev.projetopoo.ProjetoPoo.repository.CarrinhoRepository carrinhoRepository,
-                       dev.projetopoo.ProjetoPoo.repository.BibliotecaRepository bibliotecaRepository,
-                       dev.projetopoo.ProjetoPoo.repository.AvaliacaoRepository avaliacaoRepository,
-                       dev.projetopoo.ProjetoPoo.repository.CompraRepository compraRepository) {
+    public JogoService(JogoRepository jogoRepository) {
         this.jogoRepository = jogoRepository;
-        this.carrinhoRepository = carrinhoRepository;
-        this.bibliotecaRepository = bibliotecaRepository;
-        this.avaliacaoRepository = avaliacaoRepository;
-        this.compraRepository = compraRepository;
     }
 
     public List<Jogo> getJogos() {
@@ -99,34 +87,6 @@ public class JogoService {
         if (!jogoRepository.existsById(id)) {
             throw new JogoNaoEncontradoException(id);
         }
-        // Remove o jogo de todos os carrinhos
-        List<dev.projetopoo.ProjetoPoo.model.Carrinho> carrinhos = carrinhoRepository.findAll();
-        for (dev.projetopoo.ProjetoPoo.model.Carrinho carrinho : carrinhos) {
-            if (carrinho.getJogos().removeIf(jogo -> jogo.getId().equals(id))) {
-                carrinhoRepository.save(carrinho);
-            }
-        }
-
-        // Remove o jogo de todas as bibliotecas
-        List<dev.projetopoo.ProjetoPoo.model.Biblioteca> bibliotecas = bibliotecaRepository.findAll();
-        for (dev.projetopoo.ProjetoPoo.model.Biblioteca biblioteca : bibliotecas) {
-            if (biblioteca.getJogos().removeIf(jogo -> jogo.getId().equals(id))) {
-                bibliotecaRepository.save(biblioteca);
-            }
-        }
-
-        // Remove todas as avaliações do jogo
-        List<dev.projetopoo.ProjetoPoo.model.Avaliacao> avaliacoes = avaliacaoRepository.findByJogoId(id);
-        avaliacaoRepository.deleteAll(avaliacoes);
-
-        // Remove o jogo de todas as compras (histórico)
-        List<dev.projetopoo.ProjetoPoo.model.Compra> compras = compraRepository.findAll();
-        for (dev.projetopoo.ProjetoPoo.model.Compra compra : compras) {
-            if (compra.getJogos().removeIf(jogo -> jogo.getId().equals(id))) {
-                compraRepository.save(compra);
-            }
-        }
-
         jogoRepository.deleteById(id);
     }
     
