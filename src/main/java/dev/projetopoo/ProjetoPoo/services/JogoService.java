@@ -12,9 +12,21 @@ import java.util.List;
 public class JogoService {
 
     private final JogoRepository jogoRepository;
+    private final dev.projetopoo.ProjetoPoo.repository.CarrinhoRepository carrinhoRepository;
+    private final dev.projetopoo.ProjetoPoo.repository.BibliotecaRepository bibliotecaRepository;
+    private final dev.projetopoo.ProjetoPoo.repository.AvaliacaoRepository avaliacaoRepository;
+    private final dev.projetopoo.ProjetoPoo.repository.CompraRepository compraRepository;
 
-    public JogoService(JogoRepository jogoRepository) {
+    public JogoService(JogoRepository jogoRepository,
+                       dev.projetopoo.ProjetoPoo.repository.CarrinhoRepository carrinhoRepository,
+                       dev.projetopoo.ProjetoPoo.repository.BibliotecaRepository bibliotecaRepository,
+                       dev.projetopoo.ProjetoPoo.repository.AvaliacaoRepository avaliacaoRepository,
+                       dev.projetopoo.ProjetoPoo.repository.CompraRepository compraRepository) {
         this.jogoRepository = jogoRepository;
+        this.carrinhoRepository = carrinhoRepository;
+        this.bibliotecaRepository = bibliotecaRepository;
+        this.avaliacaoRepository = avaliacaoRepository;
+        this.compraRepository = compraRepository;
     }
 
     public List<Jogo> getJogos() {
@@ -22,7 +34,6 @@ public class JogoService {
     }
 
     public Jogo addGame(Jogo jogo) {
-        // Validações básicas
         if (jogo.getNome() == null || jogo.getNome().trim().isEmpty()) {
             throw new IllegalArgumentException("Nome do jogo é obrigatório");
         }
@@ -30,14 +41,12 @@ public class JogoService {
             throw new IllegalArgumentException("Preço deve ser maior ou igual a zero");
         }
         
-        // Validação da URL da imagem (opcional, mas se fornecida deve ser válida)
         if (jogo.getImagemUrl() != null && !jogo.getImagemUrl().trim().isEmpty()) {
             if (!isValidUrl(jogo.getImagemUrl())) {
                 throw new IllegalArgumentException("URL da imagem inválida. Deve começar com http:// ou https://");
             }
         }
         
-        // Verifica se já existe um jogo com o mesmo nome
         if (jogoRepository.findByNome(jogo.getNome()).isPresent()) {
             throw JogoJaExisteException.porNome(jogo.getNome());
         }
@@ -52,9 +61,7 @@ public class JogoService {
     public Jogo updateJogo(Long id, Jogo jogoAtualizado) {
         Jogo jogo = jogoRepository.findById(id).orElseThrow(() -> new JogoNaoEncontradoException(id));
         
-        // Validações e atualizações condicionais
         if (jogoAtualizado.getNome() != null && !jogoAtualizado.getNome().trim().isEmpty()) {
-            // Verifica se já existe outro jogo com o mesmo nome
             jogoRepository.findByNome(jogoAtualizado.getNome())
                 .ifPresent(existingJogo -> {
                     if (!existingJogo.getId().equals(id)) {
@@ -73,8 +80,7 @@ public class JogoService {
         } else {
             throw new IllegalArgumentException("Preço deve ser maior ou igual a zero");
         }
-        
-        // Atualiza URL da imagem se fornecida
+    
         if (jogoAtualizado.getImagemUrl() != null) {
             if (!jogoAtualizado.getImagemUrl().trim().isEmpty()) {
                 if (!isValidUrl(jogoAtualizado.getImagemUrl())) {
@@ -82,7 +88,6 @@ public class JogoService {
                 }
                 jogo.setImagemUrl(jogoAtualizado.getImagemUrl());
             } else {
-                // Se string vazia, remove a URL
                 jogo.setImagemUrl("");
             }
         }
@@ -94,14 +99,37 @@ public class JogoService {
         if (!jogoRepository.existsById(id)) {
             throw new JogoNaoEncontradoException(id);
         }
+        // Remove o jogo de todos os carrinhos
+        List<dev.projetopoo.ProjetoPoo.model.Carrinho> carrinhos = carrinhoRepository.findAll();
+        for (dev.projetopoo.ProjetoPoo.model.Carrinho carrinho : carrinhos) {
+            if (carrinho.getJogos().removeIf(jogo -> jogo.getId().equals(id))) {
+                carrinhoRepository.save(carrinho);
+            }
+        }
+
+        // Remove o jogo de todas as bibliotecas
+        List<dev.projetopoo.ProjetoPoo.model.Biblioteca> bibliotecas = bibliotecaRepository.findAll();
+        for (dev.projetopoo.ProjetoPoo.model.Biblioteca biblioteca : bibliotecas) {
+            if (biblioteca.getJogos().removeIf(jogo -> jogo.getId().equals(id))) {
+                bibliotecaRepository.save(biblioteca);
+            }
+        }
+
+        // Remove todas as avaliações do jogo
+        List<dev.projetopoo.ProjetoPoo.model.Avaliacao> avaliacoes = avaliacaoRepository.findByJogoId(id);
+        avaliacaoRepository.deleteAll(avaliacoes);
+
+        // Remove o jogo de todas as compras (histórico)
+        List<dev.projetopoo.ProjetoPoo.model.Compra> compras = compraRepository.findAll();
+        for (dev.projetopoo.ProjetoPoo.model.Compra compra : compras) {
+            if (compra.getJogos().removeIf(jogo -> jogo.getId().equals(id))) {
+                compraRepository.save(compra);
+            }
+        }
+
         jogoRepository.deleteById(id);
     }
     
-    /**
-     * Valida se a URL fornecida é válida
-     * @param url URL a ser validada
-     * @return true se a URL for válida, false caso contrário
-     */
     private boolean isValidUrl(String url) {
         if (url == null || url.trim().isEmpty()) {
             return false;

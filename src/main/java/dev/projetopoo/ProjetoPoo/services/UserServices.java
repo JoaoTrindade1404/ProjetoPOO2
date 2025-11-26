@@ -78,12 +78,10 @@ public class UserServices {
     public User updateUser(Long id, User userAtulizado) {
         User user = userRepository.findById(id).orElseThrow(() -> new UsuarioNaoEncontradoException(id));
         
-        // Validações básicas
         if (userAtulizado.getNome() != null && !userAtulizado.getNome().trim().isEmpty()) {
             user.setNome(userAtulizado.getNome());
         }
         if (userAtulizado.getEmail() != null && !userAtulizado.getEmail().trim().isEmpty()) {
-            // Verifica se o novo email já existe (exceto para o próprio usuário)
             userRepository.findByEmail(userAtulizado.getEmail())
                 .ifPresent(existingUser -> {
                     if (!existingUser.getId().equals(id)) {

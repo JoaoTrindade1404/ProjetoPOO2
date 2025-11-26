@@ -58,12 +58,10 @@ public class CompraServices {
         List<Jogo> jogosComprados = new ArrayList<>(carrinho.getJogos());
         double valorTotal = carrinho.getValorTotal();
 
-        // Verifica se o carrinho está vazio
         if (jogosComprados.isEmpty()) {
             throw new CarrinhoVazioException();
         }
 
-        // Verifica se o usuário já possui algum dos jogos do carrinho na biblioteca
         for (Jogo jogo : jogosComprados) {
             boolean jaTemNaBiblioteca = biblioteca.getJogos()
                     .stream()
@@ -74,7 +72,6 @@ public class CompraServices {
             }
         }
 
-        // Verifica se há saldo suficiente
         if(carteira.getValor() < valorTotal) {
             throw new SaldoInsuficienteException(carteira.getValor(), valorTotal);
         }

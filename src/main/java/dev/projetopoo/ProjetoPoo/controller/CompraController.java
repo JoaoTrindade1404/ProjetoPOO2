@@ -1,7 +1,6 @@
 package dev.projetopoo.ProjetoPoo.controller;
 
 
-import dev.projetopoo.ProjetoPoo.model.Carrinho;
 import dev.projetopoo.ProjetoPoo.model.Compra;
 import dev.projetopoo.ProjetoPoo.services.CompraServices;
 import org.springframework.http.ResponseEntity;

@@ -32,7 +32,6 @@ public class CarrinhoServices {
         Jogo jogo = jogoRepository.findById(jogoId)
                 .orElseThrow(() -> new JogoNaoEncontradoException(jogoId));
 
-        // Verifica se o usuário já possui o jogo na biblioteca
         Biblioteca biblioteca = bibliotecaRepository.findByUsuarioId(usuarioId)
                 .orElseThrow(() -> new UsuarioNaoEncontradoException("Biblioteca do usuário não encontrada"));
         
@@ -44,7 +43,6 @@ public class CarrinhoServices {
             throw new IllegalArgumentException("Você já possui o jogo '" + jogo.getNome() + "' na sua biblioteca");
         }
 
-        // Verifica se o jogo já está no carrinho
         boolean jaTemNoCarrinho = carrinho.getJogos()
                 .stream()
                 .anyMatch(j -> j.getId().equals(jogo.getId()));

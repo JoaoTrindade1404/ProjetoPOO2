@@ -2,7 +2,6 @@ package dev.projetopoo.ProjetoPoo.controller;
 
 
 import dev.projetopoo.ProjetoPoo.dto.ValorRequest;
-import dev.projetopoo.ProjetoPoo.model.Carteira;
 import dev.projetopoo.ProjetoPoo.services.CarteiraServices;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

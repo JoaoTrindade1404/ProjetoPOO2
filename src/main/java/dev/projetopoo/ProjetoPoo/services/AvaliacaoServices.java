@@ -65,7 +65,6 @@ public class AvaliacaoServices {
     }
 
     public List<Avaliacao> getAvaliacoesPorJogo(Long jogoId) {
-        // Verifica se o jogo existe
         jogoRepository.findById(jogoId)
                 .orElseThrow(() -> new JogoNaoEncontradoException(jogoId));
         
