@@ -7,6 +7,8 @@ import dev.projetopoo.ProjetoPoo.services.AvaliacaoServices;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/avaliacao")
 public class AvaliacaoController {
@@ -22,5 +24,16 @@ public class AvaliacaoController {
         Avaliacao avaliacao = avaliacaoServices.avaliar(usuarioId, jogoId, body.nota, body.comentario);
 
         return ResponseEntity.ok(avaliacao);
+    }
+
+    @GetMapping("/jogo/{jogoId}")
+    public List<Avaliacao> getAvaliacoesPorJogo(@PathVariable Long jogoId) {
+        return avaliacaoServices.getAvaliacoesPorJogo(jogoId);
+    }
+
+    @DeleteMapping("/{avaliacaoId}")
+    public ResponseEntity<Void> deletarAvaliacao(@PathVariable Long avaliacaoId) {
+        avaliacaoServices.deletarAvaliacao(avaliacaoId);
+        return ResponseEntity.ok().build();
     }
 }

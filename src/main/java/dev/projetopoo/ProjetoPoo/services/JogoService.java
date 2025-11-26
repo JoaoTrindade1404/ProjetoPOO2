@@ -89,6 +89,13 @@ public class JogoService {
         
         return jogoRepository.save(jogo);
     }
+
+    public void deleteJogo(Long id) {
+        if (!jogoRepository.existsById(id)) {
+            throw new JogoNaoEncontradoException(id);
+        }
+        jogoRepository.deleteById(id);
+    }
     
     /**
      * Valida se a URL fornecida é válida

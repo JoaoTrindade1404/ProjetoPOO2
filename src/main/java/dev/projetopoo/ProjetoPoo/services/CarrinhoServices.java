@@ -2,8 +2,10 @@ package dev.projetopoo.ProjetoPoo.services;
 
 
 import dev.projetopoo.ProjetoPoo.exception.*;
+import dev.projetopoo.ProjetoPoo.model.Biblioteca;
 import dev.projetopoo.ProjetoPoo.model.Carrinho;
 import dev.projetopoo.ProjetoPoo.model.Jogo;
+import dev.projetopoo.ProjetoPoo.repository.BibliotecaRepository;
 import dev.projetopoo.ProjetoPoo.repository.CarrinhoRepository;
 import dev.projetopoo.ProjetoPoo.repository.JogoRepository;
 import org.springframework.stereotype.Service;
@@ -15,10 +17,12 @@ public class CarrinhoServices {
 
     private final CarrinhoRepository carrinhoRepository;
     private final JogoRepository jogoRepository;
+    private final BibliotecaRepository bibliotecaRepository;
 
-    public CarrinhoServices(CarrinhoRepository carrinhoRepository,  JogoRepository jogoRepository) {
+    public CarrinhoServices(CarrinhoRepository carrinhoRepository, JogoRepository jogoRepository, BibliotecaRepository bibliotecaRepository) {
         this.carrinhoRepository = carrinhoRepository;
         this.jogoRepository = jogoRepository;
+        this.bibliotecaRepository = bibliotecaRepository;
     }
 
     public void adicionarJogo(Long usuarioId, Long jogoId) {
@@ -28,11 +32,24 @@ public class CarrinhoServices {
         Jogo jogo = jogoRepository.findById(jogoId)
                 .orElseThrow(() -> new JogoNaoEncontradoException(jogoId));
 
-        boolean jaTem = carrinho.getJogos()
+        // Verifica se o usuário já possui o jogo na biblioteca
+        Biblioteca biblioteca = bibliotecaRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Biblioteca do usuário não encontrada"));
+        
+        boolean jaTemNaBiblioteca = biblioteca.getJogos()
+                .stream()
+                .anyMatch(j -> j.getId().equals(jogo.getId()));
+        
+        if (jaTemNaBiblioteca) {
+            throw new IllegalArgumentException("Você já possui o jogo '" + jogo.getNome() + "' na sua biblioteca");
+        }
+
+        // Verifica se o jogo já está no carrinho
+        boolean jaTemNoCarrinho = carrinho.getJogos()
                 .stream()
                 .anyMatch(j -> j.getId().equals(jogo.getId()));
 
-        if (jaTem) {
+        if (jaTemNoCarrinho) {
             throw new IllegalArgumentException("O jogo '" + jogo.getNome() + "' já está no carrinho");
         }
 

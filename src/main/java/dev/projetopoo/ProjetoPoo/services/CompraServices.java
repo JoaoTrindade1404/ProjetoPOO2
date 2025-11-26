@@ -63,6 +63,17 @@ public class CompraServices {
             throw new CarrinhoVazioException();
         }
 
+        // Verifica se o usuário já possui algum dos jogos do carrinho na biblioteca
+        for (Jogo jogo : jogosComprados) {
+            boolean jaTemNaBiblioteca = biblioteca.getJogos()
+                    .stream()
+                    .anyMatch(j -> j.getId().equals(jogo.getId()));
+            
+            if (jaTemNaBiblioteca) {
+                throw new IllegalArgumentException("Você já possui o jogo '" + jogo.getNome() + "' na sua biblioteca. Remova-o do carrinho antes de finalizar a compra.");
+            }
+        }
+
         // Verifica se há saldo suficiente
         if(carteira.getValor() < valorTotal) {
             throw new SaldoInsuficienteException(carteira.getValor(), valorTotal);

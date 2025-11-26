@@ -35,4 +35,9 @@ public class JogoController {
     public Jogo updateJogo(@PathVariable Long id, @RequestBody Jogo jogoAtualizado) {
         return jogoService.updateJogo(id, jogoAtualizado);
     }
+
+    @DeleteMapping("/{id}")
+    public void deleteJogo(@PathVariable Long id) {
+        jogoService.deleteJogo(id);
+    }
 }

@@ -1,6 +1,7 @@
 package dev.projetopoo.ProjetoPoo.services;
 
 
+import dev.projetopoo.ProjetoPoo.exception.*;
 import dev.projetopoo.ProjetoPoo.model.Biblioteca;
 import dev.projetopoo.ProjetoPoo.model.Jogo;
 import dev.projetopoo.ProjetoPoo.repository.BibliotecaRepository;
@@ -19,7 +20,7 @@ public class BibliotecaServices {
 
     public List<Jogo> listarJogosUsuario(Long userId) {
         Biblioteca biblioteca = bibliotecaRepository.findByUsuarioId(userId)
-                .orElseThrow(() -> new RuntimeException("O usuario "+userId+" não possui jogos"));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Biblioteca do usuário não encontrada"));
         return biblioteca.getJogos();
     }
 }
