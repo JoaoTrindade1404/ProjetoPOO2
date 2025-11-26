@@ -1,6 +1,7 @@
 package dev.projetopoo.ProjetoPoo.services;
 
 
+import dev.projetopoo.ProjetoPoo.exception.*;
 import dev.projetopoo.ProjetoPoo.model.Carrinho;
 import dev.projetopoo.ProjetoPoo.model.Jogo;
 import dev.projetopoo.ProjetoPoo.repository.CarrinhoRepository;
@@ -22,17 +23,17 @@ public class CarrinhoServices {
 
     public void adicionarJogo(Long usuarioId, Long jogoId) {
         Carrinho carrinho = carrinhoRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Carrinho não encontrado"));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Carrinho do usuário não encontrado"));
 
         Jogo jogo = jogoRepository.findById(jogoId)
-                .orElseThrow(() -> new RuntimeException("Jogo não encontrado"));
+                .orElseThrow(() -> new JogoNaoEncontradoException(jogoId));
 
         boolean jaTem = carrinho.getJogos()
                 .stream()
                 .anyMatch(j -> j.getId().equals(jogo.getId()));
 
         if (jaTem) {
-            throw new RuntimeException("Jogo ja está no carrinho");
+            throw new IllegalArgumentException("O jogo '" + jogo.getNome() + "' já está no carrinho");
         }
 
         carrinho.getJogos().add(jogo);
@@ -48,9 +49,13 @@ public class CarrinhoServices {
 
     public void removerJogo(Long usuarioId, Long jogoId) {
         Carrinho carrinho = carrinhoRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Carrinho não encontrado"));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Carrinho do usuário não encontrado"));
 
-        carrinho.getJogos().removeIf(j -> j.getId().equals(jogoId));
+        boolean removido = carrinho.getJogos().removeIf(j -> j.getId().equals(jogoId));
+        
+        if (!removido) {
+            throw new JogoNaoEncontradoException("Jogo não encontrado no carrinho");
+        }
 
         double novoTotal = carrinho.getJogos().stream()
                 .mapToDouble(Jogo::getPreco)
@@ -63,7 +68,7 @@ public class CarrinhoServices {
 
     public List<Jogo> getJogos(Long usuarioId) {
         Carrinho carrinho = carrinhoRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Carrinho não encontrado"));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Carrinho do usuário não encontrado"));
 
         return carrinho.getJogos();
     }

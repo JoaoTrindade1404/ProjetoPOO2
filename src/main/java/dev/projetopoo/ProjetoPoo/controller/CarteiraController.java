@@ -23,6 +23,12 @@ public class CarteiraController {
         double novoSaldo = carteiraServices.adicionarValor(userId, request.valor);
         return ResponseEntity.ok(novoSaldo);
     }
+    
+    @GetMapping("/{userId}")
+    public ResponseEntity<Double> verSaldo(@PathVariable Long userId) {
+        double saldo = carteiraServices.verSaldo(userId);
+        return ResponseEntity.ok(saldo);
+    }
 
 
 }

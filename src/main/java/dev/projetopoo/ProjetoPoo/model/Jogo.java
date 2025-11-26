@@ -21,6 +21,9 @@ public class Jogo {
     private String descricao;
     private LocalDate dataLancamento;
     private double avaliacao;
+    
+    @Column(name = "imagem_url", length = 500)
+    private String imagemUrl;
 
     public Jogo() {
     }
@@ -33,6 +36,7 @@ public class Jogo {
         this.descricao = "";
         this.dataLancamento = LocalDate.now();
         this.avaliacao = 0;
+        this.imagemUrl = "";
     }
 
 

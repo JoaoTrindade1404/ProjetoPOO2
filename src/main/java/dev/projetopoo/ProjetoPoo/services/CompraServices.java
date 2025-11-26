@@ -1,14 +1,27 @@
 package dev.projetopoo.ProjetoPoo.services;
 
 
-import dev.projetopoo.ProjetoPoo.model.*;
-import dev.projetopoo.ProjetoPoo.repository.*;
-import jakarta.transaction.Transactional;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import dev.projetopoo.ProjetoPoo.exception.CarrinhoVazioException;
+import dev.projetopoo.ProjetoPoo.exception.SaldoInsuficienteException;
+import dev.projetopoo.ProjetoPoo.exception.UsuarioNaoEncontradoException;
+import dev.projetopoo.ProjetoPoo.model.Biblioteca;
+import dev.projetopoo.ProjetoPoo.model.Carrinho;
+import dev.projetopoo.ProjetoPoo.model.Carteira;
+import dev.projetopoo.ProjetoPoo.model.Compra;
+import dev.projetopoo.ProjetoPoo.model.Jogo;
+import dev.projetopoo.ProjetoPoo.model.User;
+import dev.projetopoo.ProjetoPoo.repository.BibliotecaRepository;
+import dev.projetopoo.ProjetoPoo.repository.CarrinhoRepository;
+import dev.projetopoo.ProjetoPoo.repository.CarteiraRepository;
+import dev.projetopoo.ProjetoPoo.repository.CompraRepository;
+import dev.projetopoo.ProjetoPoo.repository.UserRepository;
+import jakarta.transaction.Transactional;
 
 @Service
 public class CompraServices {
@@ -34,19 +47,25 @@ public class CompraServices {
     @Transactional
     public Compra efetuarCompra(Long usuarioId) {
         User usuario = userRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException(usuarioId));
         Carteira carteira = carteiraRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Carteira não encontrada"));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Carteira do usuário não encontrada"));
         Carrinho carrinho = carrinhoRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Carrinho não encontrado"));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Carrinho do usuário não encontrado"));
         Biblioteca biblioteca = bibliotecaRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Biblioteca não encontrada"));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Biblioteca do usuário não encontrada"));
 
         List<Jogo> jogosComprados = new ArrayList<>(carrinho.getJogos());
         double valorTotal = carrinho.getValorTotal();
 
+        // Verifica se o carrinho está vazio
+        if (jogosComprados.isEmpty()) {
+            throw new CarrinhoVazioException();
+        }
+
+        // Verifica se há saldo suficiente
         if(carteira.getValor() < valorTotal) {
-            throw new RuntimeException("Saldo insuficiente na carteira");
+            throw new SaldoInsuficienteException(carteira.getValor(), valorTotal);
         }
 
         Compra compra =  new Compra();
@@ -74,13 +93,13 @@ public class CompraServices {
     @Transactional
     public void efetuarReembolso(Long compraId){
         Compra compra = compraRepository.findById(compraId)
-                .orElseThrow(() -> new RuntimeException("Compra não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Compra com ID " + compraId + " não foi encontrada"));
 
         User usuario = compra.getUsuario();
         Carteira carteira = carteiraRepository.findByUsuarioId(usuario.getId())
-                .orElseThrow(() -> new RuntimeException("Carteira não encontrada"));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Carteira do usuário não encontrada"));
         Biblioteca biblioteca = bibliotecaRepository.findByUsuarioId(usuario.getId())
-                .orElseThrow(() -> new RuntimeException("Biblioteca não encontrada"));
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Biblioteca do usuário não encontrada"));
 
         carteira.setValor(carteira.getValor() + compra.getValor());
         carteiraRepository.save(carteira);
@@ -97,6 +116,6 @@ public class CompraServices {
 
     public Compra getCompraPorId(Long idCompra) {
         return compraRepository.findById(idCompra)
-                .orElseThrow(() -> new RuntimeException("Compra não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Compra com ID " + idCompra + " não foi encontrada"));
     }
 }
