@@ -35,6 +35,9 @@ public class Compra {
 
     private LocalDateTime dataCompra;
 
+    @Column(columnDefinition = "boolean default false")
+    private boolean reembolsado = false;
+
     public Compra() {
     }
 

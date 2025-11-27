@@ -103,6 +103,10 @@ public class CompraServices {
         Compra compra = compraRepository.findById(compraId)
                 .orElseThrow(() -> new IllegalArgumentException("Compra com ID " + compraId + " não foi encontrada"));
 
+        if (compra.isReembolsado()) {
+            throw new IllegalArgumentException("Esta compra já foi reembolsada.");
+        }
+
         User usuario = compra.getUsuario();
         Carteira carteira = carteiraRepository.findByUsuarioId(usuario.getId())
                 .orElseThrow(() -> new UsuarioNaoEncontradoException("Carteira do usuário não encontrada"));
@@ -115,6 +119,7 @@ public class CompraServices {
         biblioteca.getJogos().removeAll(compra.getJogos());
         bibliotecaRepository.save(biblioteca);
 
+        compra.setReembolsado(true);
         compraRepository.save(compra);
     }
 
