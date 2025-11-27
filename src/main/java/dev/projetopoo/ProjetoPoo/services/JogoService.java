@@ -39,6 +39,10 @@ public class JogoService {
             throw JogoJaExisteException.porNome(jogo.getNome());
         }
         
+        if (jogo.getDataLancamento() == null) {
+            jogo.setDataLancamento(java.time.LocalDate.now());
+        }
+        
         return jogoRepository.save(jogo);
     }
 
@@ -61,6 +65,14 @@ public class JogoService {
         
         if (jogoAtualizado.getGender() != null && !jogoAtualizado.getGender().trim().isEmpty()) {
             jogo.setGender(jogoAtualizado.getGender());
+        }
+
+        if (jogoAtualizado.getDescricao() != null && !jogoAtualizado.getDescricao().trim().isEmpty()) {
+            jogo.setDescricao(jogoAtualizado.getDescricao());
+        }
+
+        if (jogoAtualizado.getAvaliacao() >= 0) {
+            jogo.setAvaliacao(jogoAtualizado.getAvaliacao());
         }
         
         if (jogoAtualizado.getPreco() >= 0) {
