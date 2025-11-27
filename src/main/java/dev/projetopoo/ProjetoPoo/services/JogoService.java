@@ -1,12 +1,14 @@
 package dev.projetopoo.ProjetoPoo.services;
 
 
-import dev.projetopoo.ProjetoPoo.exception.*;
-import dev.projetopoo.ProjetoPoo.model.Jogo;
-import dev.projetopoo.ProjetoPoo.repository.JogoRepository;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import dev.projetopoo.ProjetoPoo.exception.JogoJaExisteException;
+import dev.projetopoo.ProjetoPoo.exception.JogoNaoEncontradoException;
+import dev.projetopoo.ProjetoPoo.model.Jogo;
+import dev.projetopoo.ProjetoPoo.repository.JogoRepository;
 
 @Service
 public class JogoService {
@@ -73,6 +75,11 @@ public class JogoService {
         
         if (jogoAtualizado.getGender() != null && !jogoAtualizado.getGender().trim().isEmpty()) {
             jogo.setGender(jogoAtualizado.getGender());
+        }
+        
+        // Atualiza descrição se fornecida
+        if (jogoAtualizado.getDescricao() != null) {
+            jogo.setDescricao(jogoAtualizado.getDescricao());
         }
         
         if (jogoAtualizado.getPreco() >= 0) {
