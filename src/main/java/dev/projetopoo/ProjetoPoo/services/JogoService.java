@@ -13,9 +13,11 @@ import dev.projetopoo.ProjetoPoo.repository.JogoRepository;
 public class JogoService {
 
     private final JogoRepository jogoRepository;
+    private final java.util.List<dev.projetopoo.ProjetoPoo.services.validation.ValidadorJogo> validadores;
 
-    public JogoService(JogoRepository jogoRepository) {
+    public JogoService(JogoRepository jogoRepository, java.util.List<dev.projetopoo.ProjetoPoo.services.validation.ValidadorJogo> validadores) {
         this.jogoRepository = jogoRepository;
+        this.validadores = validadores;
     }
 
     public List<Jogo> getJogos() {
@@ -23,47 +25,12 @@ public class JogoService {
     }
 
     public Jogo addGame(Jogo jogo) {
-        if (jogo.getNome() == null || jogo.getNome().trim().isEmpty()) {
-            throw new IllegalArgumentException("Nome do jogo é obrigatório");
-        }
-        
-        if (jogo.getPreco() < 0) {
-            throw new IllegalArgumentException("Preço deve ser maior ou igual a zero");
-        }
-        
-        if (jogo.getGender() == null) {
-            jogo.setGender("");
-        }
-        
-        if (jogo.getDescricao() == null) {
-            jogo.setDescricao("");
-        }
-        
-        if (jogo.getImagemUrl() == null) {
-            jogo.setImagemUrl("");
-        }
-        
-        if (jogo.getImagemUrl() != null && !jogo.getImagemUrl().trim().isEmpty()) {
-            if (!isValidUrl(jogo.getImagemUrl())) {
-                throw new IllegalArgumentException("URL da imagem inválida. Deve começar com http:// ou https://");
-            }
-        } else {
-            jogo.setImagemUrl("");
-        }
-        
-        if (jogo.getAvaliacao() < 0) {
-            jogo.setAvaliacao(0.0);
-        }
+        // OCP: Validations are now decoupled and open for extension
+        validadores.forEach(v -> v.validar(jogo));
         
         if (jogoRepository.findByNome(jogo.getNome()).isPresent()) {
             throw JogoJaExisteException.porNome(jogo.getNome());
         }
-        
-        if (jogo.getDataLancamento() == null) {
-            jogo.setDataLancamento(java.time.LocalDate.now());
-        }
-        
-        jogo.setAtivo(true);
         
         try {
             return jogoRepository.save(jogo);
