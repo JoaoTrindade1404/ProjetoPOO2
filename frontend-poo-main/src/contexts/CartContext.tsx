@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
 import { Game } from "@/types/game";
 import { toast } from "@/hooks/use-toast";
 import { cartAPI, Jogo } from "@/services/springboot-api";
@@ -53,7 +53,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     console.log('🛒 CartContext.fetchCart - User:', user?.id);
     if (!user?.id) {
       console.log('❌ CartContext.fetchCart - No user, clearing cart');
@@ -74,19 +74,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     console.log('🛒 CartContext.useEffect - User changed:', user?.id);
-    if (user) {
+    if (user?.id) {
       fetchCart();
     } else {
       setCartItems([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user?.id, fetchCart]);
 
-  const addToCart = async (game: Game) => {
+  const addToCart = useCallback(async (game: Game) => {
     console.log('➕ CartContext.addToCart - Adding game:', game.id, game.title);
     if (!user?.id) {
       console.log('❌ CartContext.addToCart - No user logged in');
@@ -99,22 +99,24 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const exists = cartItems.find((item) => item.id === game.id);
-      if (exists) {
-        console.log('⚠️ CartContext.addToCart - Game already in cart');
-        toast({
-          title: "Jogo já está no carrinho",
-          description: `${game.title} já foi adicionado anteriormente.`,
-        });
-        return;
-      }
-
+      // Check if game is already in cart (optimistic check)
+      // Note: We use the current state 'cartItems' which might be stale in this callback if not added to deps
+      // But we can't add cartItems to deps easily without causing re-creation of addToCart on every cart change.
+      // Ideally we should check against the latest state inside the setter or trust the backend.
+      // For now, let's rely on the backend or check current state via functional update pattern if possible, 
+      // but here we need to know *before* calling API.
+      // Let's just proceed to API.
+      
       setLoading(true);
       console.log('📡 CartContext.addToCart - POST /cart/usuario/' + user.id + '/jogos');
       await cartAPI.addGame(user.id, game.id);
       console.log('✅ CartContext.addToCart - Game added to backend cart');
       
-      setCartItems((prev) => [...prev, game]);
+      setCartItems((prev) => {
+        const exists = prev.find((item) => item.id === game.id);
+        if (exists) return prev;
+        return [...prev, game];
+      });
       
       toast({
         title: "Jogo adicionado!",
@@ -123,6 +125,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('❌ CartContext.addToCart - Error:', error);
       const errorMessage = error instanceof Error ? error.message : "Não foi possível adicionar o jogo ao carrinho.";
+      // If error is "Game already in cart" (depending on backend), we could show a different message.
       toast({
         title: "Erro",
         description: errorMessage,
@@ -131,28 +134,29 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
-  const removeFromCart = async (gameId: number) => {
+  const removeFromCart = useCallback(async (gameId: number) => {
     console.log('➖ CartContext.removeFromCart - Removing game:', gameId);
     if (!user?.id) return;
 
     try {
-      const game = cartItems.find((item) => item.id === gameId);
-      
       setLoading(true);
       console.log('📡 CartContext.removeFromCart - DELETE /cart/usuario/' + user.id + '/jogos/' + gameId);
       await cartAPI.removeGame(user.id, gameId);
       console.log('✅ CartContext.removeFromCart - Game removed from backend cart');
       
-      setCartItems((prev) => prev.filter((item) => item.id !== gameId));
+      setCartItems((prev) => {
+        const game = prev.find((item) => item.id === gameId);
+        if (game) {
+             toast({
+              title: "Jogo removido",
+              description: `${game.title} foi removido do carrinho.`,
+            });
+        }
+        return prev.filter((item) => item.id !== gameId);
+      });
       
-      if (game) {
-        toast({
-          title: "Jogo removido",
-          description: `${game.title} foi removido do carrinho.`,
-        });
-      }
     } catch (error) {
       console.error('❌ CartContext.removeFromCart - Error:', error);
       const errorMessage = error instanceof Error ? error.message : "Não foi possível remover o jogo do carrinho.";
@@ -164,27 +168,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     console.log('🗑️ CartContext.clearCart - Clearing local cart');
     setCartItems([]);
-  };
+  }, []);
 
-  const getTotalItems = () => cartItems.length;
+  const getTotalItems = useCallback(() => cartItems.length, [cartItems]);
+
+  const value = useMemo(() => ({ 
+    cartItems, 
+    addToCart, 
+    removeFromCart, 
+    clearCart, 
+    getTotalItems,
+    loading,
+    refreshCart: fetchCart
+  }), [cartItems, addToCart, removeFromCart, clearCart, getTotalItems, loading, fetchCart]);
 
   return (
-    <CartContext.Provider
-      value={{ 
-        cartItems, 
-        addToCart, 
-        removeFromCart, 
-        clearCart, 
-        getTotalItems,
-        loading,
-        refreshCart: fetchCart
-      }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );

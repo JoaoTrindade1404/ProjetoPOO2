@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
 import { walletAPI, userAPI } from "@/services/springboot-api";
 import { useAuth } from "./AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -17,7 +17,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(false);
   const { user, updateUserBalance } = useAuth();
 
-  const refreshBalance = async () => {
+  const refreshBalance = useCallback(async () => {
     console.log('🔍 WalletContext.refreshBalance - userId:', user?.id);
     
     if (!user?.id) {
@@ -33,14 +33,20 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       
       const newBalance = walletBalance || 0;
       setBalance(newBalance);
-      updateUserBalance(newBalance);
-      console.log('💰 WalletContext.refreshBalance - Balance set to:', newBalance);
+      
+      // Only update user balance if it has changed to prevent infinite loops
+      if (user.saldo !== newBalance) {
+        console.log('💰 WalletContext.refreshBalance - Updating user balance from', user.saldo, 'to', newBalance);
+        updateUserBalance(newBalance);
+      } else {
+        console.log('💰 WalletContext.refreshBalance - Balance unchanged, skipping user update');
+      }
       
     } catch (error) {
       console.error('❌ WalletContext.refreshBalance - Error fetching wallet:', error);
       setBalance(0);
     }
-  };
+  }, [user?.id, user?.saldo, updateUserBalance]);
 
   useEffect(() => {
     if (user?.id) {
@@ -49,9 +55,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       setBalance(0);
       console.log('💰 WalletContext.useEffect - No user, balance set to 0');
     }
-  }, [user?.id]);
+  }, [user?.id, refreshBalance]);
 
-  const addBalance = async (amount: number) => {
+  const addBalance = useCallback(async (amount: number) => {
     console.log('💵 WalletContext.addBalance - Adding:', amount, 'to user:', user?.id);
     
     if (!user?.id) {
@@ -99,17 +105,17 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, updateUserBalance]);
+
+  const value = useMemo(() => ({ 
+    balance, 
+    addBalance,
+    refreshBalance,
+    loading
+  }), [balance, addBalance, refreshBalance, loading]);
 
   return (
-    <WalletContext.Provider
-      value={{ 
-        balance, 
-        addBalance,
-        refreshBalance,
-        loading
-      }}
-    >
+    <WalletContext.Provider value={value}>
       {children}
     </WalletContext.Provider>
   );

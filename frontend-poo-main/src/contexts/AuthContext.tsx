@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { userAPI, User as SpringBootUser } from '@/services/springboot-api';
 
 interface User extends SpringBootUser {
@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const validateSession = async (): Promise<boolean> => {
+  const validateSession = useCallback(async (): Promise<boolean> => {
     const storedUser = localStorage.getItem(USER_STORAGE_KEY);
     const sessionTimestamp = localStorage.getItem(SESSION_TIMESTAMP_KEY);
     
@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       return false;
     }
-  };
+  }, []);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -93,9 +93,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initializeAuth();
-  }, []);
+  }, [validateSession]);
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = useCallback(async (email: string, password: string, fullName?: string) => {
     console.log('📝 AuthContext.signUp - Creating user:', email);
     try {
       setLoading(true);
@@ -118,9 +118,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     console.log('🔐 AuthContext.signIn - Logging in user:', email);
     try {
       setLoading(true);
@@ -139,48 +139,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     console.log('🚪 AuthContext.signOut - Logging out user');
     setUser(null);
     localStorage.removeItem(USER_STORAGE_KEY);
     localStorage.removeItem(SESSION_TIMESTAMP_KEY);
-  };
+  }, []);
 
-  const updateUserBalance = (newBalance: number) => {
+  const updateUserBalance = useCallback((newBalance: number) => {
     console.log('💰 AuthContext.updateUserBalance - Updating balance to:', newBalance);
-    if (user) {
-      const updatedUser = { ...user, saldo: newBalance };
-      setUser(updatedUser);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
-      console.log('✅ AuthContext.updateUserBalance - Balance updated in state and localStorage');
-    } else {
-      console.log('❌ AuthContext.updateUserBalance - No user to update');
-    }
-  };
+    setUser((currentUser) => {
+      if (currentUser) {
+        const updatedUser = { ...currentUser, saldo: newBalance };
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+        console.log('✅ AuthContext.updateUserBalance - Balance updated in state and localStorage');
+        return updatedUser;
+      } else {
+        console.log('❌ AuthContext.updateUserBalance - No user to update');
+        return currentUser;
+      }
+    });
+  }, []);
 
-  const updateUser = (updatedUser: User) => {
+  const updateUser = useCallback((updatedUser: User) => {
     console.log('👤 AuthContext.updateUser - Updating user:', updatedUser);
     setUser(updatedUser);
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
     console.log('✅ AuthContext.updateUser - User updated in state and localStorage');
-  };
+  }, []);
 
   const isAuthenticated = !!user;
 
+  const value = useMemo(() => ({
+    user, 
+    signUp, 
+    signIn, 
+    signOut, 
+    updateUserBalance,
+    updateUser,
+    loading, 
+    isAuthenticated,
+    validateSession 
+  }), [user, signUp, signIn, signOut, updateUserBalance, updateUser, loading, isAuthenticated, validateSession]);
+
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      signUp, 
-      signIn, 
-      signOut, 
-      updateUserBalance,
-      updateUser,
-      loading, 
-      isAuthenticated,
-      validateSession 
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
