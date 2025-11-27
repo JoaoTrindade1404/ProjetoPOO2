@@ -6,10 +6,15 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 @Getter
 @Setter
 @Entity
 @Table(name = "jogo_table")
+@SQLDelete(sql = "UPDATE jogo_table SET ativo = false WHERE id = ?")
+@SQLRestriction("ativo = true")
 public class Jogo {
 
     @Id
@@ -24,6 +29,9 @@ public class Jogo {
     
     @Column(name = "imagem_url", length = 500)
     private String imagemUrl;
+
+    @Column(columnDefinition = "boolean default true")
+    private boolean ativo = true;
 
     public Jogo() {
     }
