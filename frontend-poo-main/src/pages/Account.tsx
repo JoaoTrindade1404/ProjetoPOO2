@@ -11,11 +11,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, Shield, LogOut, Wallet, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { userAPI } from "@/services/springboot-api";
 
 const Account = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, updateUser } = useAuth();
   const { balance, addBalance, refreshBalance, loading: walletLoading } = useWallet();
   const { libraryGames } = useLibrary();
 
@@ -33,9 +34,17 @@ const Account = () => {
 
   const [personalInfo, setPersonalInfo] = useState({
     fullName: user?.nome || "Usuário",
-    username: user?.email?.split('@')[0] || "user",
     email: user?.email || ""
   });
+
+  useEffect(() => {
+    if (user) {
+      setPersonalInfo({
+        fullName: user.nome || "Usuário",
+        email: user.email || ""
+      });
+    }
+  }, [user]);
 
   const [passwords, setPasswords] = useState({
     current: "",
@@ -46,14 +55,65 @@ const Account = () => {
 
   const [addBalanceAmount, setAddBalanceAmount] = useState("");
 
-  const handleSavePersonalInfo = () => {
-    toast({
-      title: "Sucesso!",
-      description: "Informações pessoais atualizadas",
-    });
+  const handleSavePersonalInfo = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Erro",
+        description: "Usuário não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!personalInfo.fullName || !personalInfo.email) {
+      toast({
+        title: "Erro",
+        description: "Nome e email são obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const updatedUser = await userAPI.update(user.id, {
+        nome: personalInfo.fullName,
+        email: personalInfo.email,
+      });
+
+      updateUser(updatedUser);
+      toast({
+        title: "Sucesso!",
+        description: "Informações pessoais atualizadas",
+      });
+    } catch (error: any) {
+      console.error("Erro ao atualizar informações:", error);
+      toast({
+        title: "Erro",
+        description: error?.message || "Erro ao atualizar informações pessoais",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleUpdatePassword = () => {
+  const handleUpdatePassword = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Erro",
+        description: "Usuário não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!passwords.current || !passwords.new || !passwords.confirm) {
+      toast({
+        title: "Erro",
+        description: "Preencha todos os campos de senha",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (passwords.new !== passwords.confirm) {
       toast({
         title: "Erro",
@@ -62,11 +122,31 @@ const Account = () => {
       });
       return;
     }
-    toast({
-      title: "Sucesso!",
-      description: "Senha atualizada com sucesso",
-    });
-    setPasswords({ current: "", new: "", confirm: "" });
+
+    if (passwords.new.length < 3) {
+      toast({
+        title: "Erro",
+        description: "A nova senha deve ter pelo menos 3 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await userAPI.changePassword(user.id, passwords.current, passwords.new);
+      toast({
+        title: "Sucesso!",
+        description: "Senha atualizada com sucesso",
+      });
+      setPasswords({ current: "", new: "", confirm: "" });
+    } catch (error: any) {
+      console.error("Erro ao atualizar senha:", error);
+      toast({
+        title: "Erro",
+        description: error?.message || "Erro ao atualizar senha. Verifique se a senha atual está correta.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSignOut = async () => {
@@ -185,16 +265,9 @@ const Account = () => {
                   />
                 </div>
                 <div>
-                  <Label>Nome de Usuário</Label>
-                  <Input 
-                    value={personalInfo.username}
-                    onChange={(e) => setPersonalInfo({...personalInfo, username: e.target.value})}
-                    className="bg-secondary/50" 
-                  />
-                </div>
-                <div>
                   <Label>Email</Label>
                   <Input 
+                    type="email"
                     value={personalInfo.email}
                     onChange={(e) => setPersonalInfo({...personalInfo, email: e.target.value})}
                     className="bg-secondary/50" 

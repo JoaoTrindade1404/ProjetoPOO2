@@ -139,6 +139,15 @@ export const userAPI = {
       method: 'POST',
       body: JSON.stringify({ email, senha }),
     }),
+
+  /**
+   * Altera a senha do usuário
+   */
+  changePassword: (id: number, currentPassword: string, newPassword: string) =>
+    fetchAPI<void>(`/user/${id}/password`, {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
 };
 
 

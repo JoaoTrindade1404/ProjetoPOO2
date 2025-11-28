@@ -111,4 +111,22 @@ public class UserServices {
         }
         return user;
     }
+
+    public void changePassword(Long id, String currentPassword, String newPassword) {
+        if (currentPassword == null || currentPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("Senha atual é obrigatória");
+        }
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("Nova senha é obrigatória");
+        }
+        
+        User user = userRepository.findById(id).orElseThrow(() -> new UsuarioNaoEncontradoException(id));
+        
+        if (!user.getSenha().equals(currentPassword)) {
+            throw new CredenciaisInvalidasException();
+        }
+        
+        user.setSenha(newPassword);
+        userRepository.save(user);
+    }
 }

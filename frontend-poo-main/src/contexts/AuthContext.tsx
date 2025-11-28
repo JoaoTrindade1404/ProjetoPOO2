@@ -13,6 +13,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateUserBalance: (newBalance: number) => void;
+  updateUser: (updatedUser: User) => void;
   loading: boolean;
   isAuthenticated: boolean;
   validateSession: () => Promise<boolean>;
@@ -159,6 +160,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUser = (updatedUser: User) => {
+    console.log('👤 AuthContext.updateUser - Updating user:', updatedUser);
+    setUser(updatedUser);
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+    console.log('✅ AuthContext.updateUser - User updated in state and localStorage');
+  };
+
   const isAuthenticated = !!user;
 
   return (
@@ -167,7 +175,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signUp, 
       signIn, 
       signOut, 
-      updateUserBalance, 
+      updateUserBalance,
+      updateUser,
       loading, 
       isAuthenticated,
       validateSession 
