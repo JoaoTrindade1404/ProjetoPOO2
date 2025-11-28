@@ -1,6 +1,5 @@
 package dev.projetopoo.ProjetoPoo.services;
 
-
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -27,14 +26,33 @@ public class JogoService {
         if (jogo.getNome() == null || jogo.getNome().trim().isEmpty()) {
             throw new IllegalArgumentException("Nome do jogo é obrigatório");
         }
+        
         if (jogo.getPreco() < 0) {
             throw new IllegalArgumentException("Preço deve ser maior ou igual a zero");
+        }
+        
+        if (jogo.getGender() == null) {
+            jogo.setGender("");
+        }
+        
+        if (jogo.getDescricao() == null) {
+            jogo.setDescricao("");
+        }
+        
+        if (jogo.getImagemUrl() == null) {
+            jogo.setImagemUrl("");
         }
         
         if (jogo.getImagemUrl() != null && !jogo.getImagemUrl().trim().isEmpty()) {
             if (!isValidUrl(jogo.getImagemUrl())) {
                 throw new IllegalArgumentException("URL da imagem inválida. Deve começar com http:// ou https://");
             }
+        } else {
+            jogo.setImagemUrl("");
+        }
+        
+        if (jogo.getAvaliacao() < 0) {
+            jogo.setAvaliacao(0.0);
         }
         
         if (jogoRepository.findByNome(jogo.getNome()).isPresent()) {
@@ -45,7 +63,14 @@ public class JogoService {
             jogo.setDataLancamento(java.time.LocalDate.now());
         }
         
-        return jogoRepository.save(jogo);
+        jogo.setAtivo(true);
+        
+        try {
+            return jogoRepository.save(jogo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao salvar jogo: " + e.getMessage(), e);
+        }
     }
 
     public Jogo getJogoById(Long id) {
@@ -77,7 +102,6 @@ public class JogoService {
             jogo.setAvaliacao(jogoAtualizado.getAvaliacao());
         }
         
-        // Atualiza descrição se fornecida
         if (jogoAtualizado.getDescricao() != null) {
             jogo.setDescricao(jogoAtualizado.getDescricao());
         }

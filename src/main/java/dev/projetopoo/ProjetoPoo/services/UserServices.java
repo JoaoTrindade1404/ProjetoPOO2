@@ -1,6 +1,11 @@
 package dev.projetopoo.ProjetoPoo.services;
 
-import dev.projetopoo.ProjetoPoo.exception.*;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import dev.projetopoo.ProjetoPoo.exception.CredenciaisInvalidasException;
+import dev.projetopoo.ProjetoPoo.exception.UsuarioNaoEncontradoException;
 import dev.projetopoo.ProjetoPoo.model.Biblioteca;
 import dev.projetopoo.ProjetoPoo.model.Carrinho;
 import dev.projetopoo.ProjetoPoo.model.Carteira;
@@ -9,9 +14,6 @@ import dev.projetopoo.ProjetoPoo.repository.BibliotecaRepository;
 import dev.projetopoo.ProjetoPoo.repository.CarrinhoRepository;
 import dev.projetopoo.ProjetoPoo.repository.CarteiraRepository;
 import dev.projetopoo.ProjetoPoo.repository.UserRepository;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class UserServices {
@@ -29,7 +31,6 @@ public class UserServices {
         this.carrinhoRepository = carrinhoRepository;
         this.bibliotecaRepository = bibliotecaRepository;
         this.carteiraRepository = carteiraRepository;
-
     }
 
     public List<User> getAllUsers() {
@@ -41,7 +42,6 @@ public class UserServices {
     }
 
     public User addUser(User user) {
-        // Validações básicas
         if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email é obrigatório");
         }
@@ -111,6 +111,4 @@ public class UserServices {
         }
         return user;
     }
-
-
 }

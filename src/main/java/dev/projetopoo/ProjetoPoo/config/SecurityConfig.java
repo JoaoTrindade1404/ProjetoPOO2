@@ -73,12 +73,23 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
                 "http://localhost:8080",
-                "http://127.0.0.1:8080"
+                "http://127.0.0.1:8080",
+                "http://localhost:8083",
+                "http://127.0.0.1:8083"
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Authorization", 
+                "Cache-Control", 
+                "Content-Type",
+                "Origin",
+                "X-Requested-With",
+                "Accept",
+                "Accept-Language"
+        ));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         

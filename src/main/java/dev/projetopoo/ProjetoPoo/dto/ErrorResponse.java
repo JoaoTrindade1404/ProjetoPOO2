@@ -21,7 +21,6 @@ public class ErrorResponse {
         this.path = path;
     }
 
-    // Getters e Setters
     public String getMessage() {
         return message;
     }

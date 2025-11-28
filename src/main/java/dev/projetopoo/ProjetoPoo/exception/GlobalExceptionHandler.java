@@ -1,11 +1,12 @@
 package dev.projetopoo.ProjetoPoo.exception;
 
-import dev.projetopoo.ProjetoPoo.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+
+import dev.projetopoo.ProjetoPoo.dto.ErrorResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -112,8 +113,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex, WebRequest request) {
         
+        ex.printStackTrace();
+        String errorMessage = ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName();
+        
         ErrorResponse errorResponse = new ErrorResponse(
-            "Ocorreu um erro interno no servidor. Tente novamente mais tarde.",
+            errorMessage,
             HttpStatus.INTERNAL_SERVER_ERROR.value(),
             "Erro Interno",
             request.getDescription(false).replace("uri=", "")
