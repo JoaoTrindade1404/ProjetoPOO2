@@ -6,7 +6,16 @@
   <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" />
   <img src="https://img.shields.io/badge/React-20232a?style=for-the-badge&logo=react&logoColor=61DAFB" />
   <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" />
+  <img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white" />
+</div>
+
+<br />
+
+<div align="center">
+  <a href="https://frontend-game-marketplace.vercel.app/" target="_blank">
+    <img src="https://img.shields.io/badge/Acessar_Aplicação_Online-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+  </a>
 </div>
 
 <br />
@@ -35,6 +44,22 @@ O sistema conta com um **Backend em Java (Spring Boot)** que gerencia toda a ló
 * **TypeScript:** Tipagem estática para maior segurança no código.
 * **Tailwind CSS + Shadcn UI:** Design System moderno, responsivo e acessível.
 * **Context API:** Gerenciamento de estado global (Carrinho, Autenticação).
+
+### Infraestrutura & Deploy
+* **Vercel:** Hospedagem do Frontend (CI/CD automático).
+* **Render:** Hospedagem do Backend em Container Docker.
+* **Supabase:** Banco de Dados PostgreSQL Gerenciado (com Connection Pooling).
+
+---
+
+## 🚀 Deploy e Infraestrutura
+
+A aplicação roda em uma arquitetura de nuvem híbrida, simulando um ambiente de produção real:
+
+* **Arquitetura Distribuída:** Frontend na Vercel se comunica com o Backend no Render via HTTPS.
+* **Segurança:** Configuração de **CORS** restrita e uso de **Variáveis de Ambiente** para proteção de credenciais.
+* **Banco de Dados na Nuvem:** O Backend conecta-se ao Supabase via **PgBouncer** (Porta 6543) para gerenciar eficientemente o pool de conexões.
+* **Roteamento SPA:** Frontend configurado com `vercel.json` para suportar rotas de Single Page Application.
 
 ---
 
@@ -77,3 +102,4 @@ ProjetoPOO2/
 │   │   ├── contexts/        # Estado Global (Auth, Cart)
 │   │   ├── pages/           # Telas (Home, Library, Cart)
 │   │   └── services/        # Integração com API Java
+```
